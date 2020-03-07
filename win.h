@@ -23,13 +23,20 @@ enum win_mode {
 	                  |MODE_MOUSEMANY,
 };
 
+typedef struct {
+	char *name;
+	char **colors[];
+} Colorscheme;
+
 void xbell(void);
 void xclipcopy(void);
+void xcyclecolorscheme(Arg);
 void xdrawcursor(int, int, Glyph, int, int, Glyph);
 void xdrawline(Line, int, int, int);
 void xfinishdraw(void);
 void xloadcols(void);
 int xsetcolorname(int, const char *);
+void xsetinfotitle(char *);
 void xsettitle(char *);
 int xsetcursor(int);
 void xsetmode(int, unsigned int);
