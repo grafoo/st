@@ -83,7 +83,7 @@ char *termname = "st-256color";
 unsigned int tabspaces = 8;
 
 /* Terminal colors (16 first used in escape sequence) */
-static const char *colorname[] = {
+static const char *colornames_default[] = {
 	/* 8 normal colors */
 	"black",
 	"red3",
@@ -111,7 +111,7 @@ static const char *colorname[] = {
 	"#555555",
 };
 
-static const char *colorname_gruvbox_dark_hard[] = {
+static const char *colornames_gruvbox_dark_hard[] = {
 	"#1d2021",
 	"#cc241d",
 	"#98971a",
@@ -130,7 +130,7 @@ static const char *colorname_gruvbox_dark_hard[] = {
 	"#ebdbb2",
 };
 
-static const char *colorname_gruvbox_dark_medium[] = {
+static const char *colornames_gruvbox_dark_medium[] = {
 	"#282828",
 	"#cc241d",
 	"#98971a",
@@ -149,7 +149,7 @@ static const char *colorname_gruvbox_dark_medium[] = {
 	"#ebdbb2",
 };
 
-static const char *colorname_gruvbox_dark_soft[] = {
+static const char *colornames_gruvbox_dark_soft[] = {
 	"#32302f",
 	"#cc241d",
 	"#98971a",
@@ -168,7 +168,7 @@ static const char *colorname_gruvbox_dark_soft[] = {
 	"#ebdbb2",
 };
 
-static const char *colorname_gruvbox_light_hard[] = {
+static const char *colornames_gruvbox_light_hard[] = {
 	"#f9f5d7",
 	"#cc241d",
 	"#98971a",
@@ -187,7 +187,7 @@ static const char *colorname_gruvbox_light_hard[] = {
 	"#3c3836",
 };
 
-static const char *colorname_gruvbox_light_medium[] = {
+static const char *colornames_gruvbox_light_medium[] = {
 	"#fbf1c7",
 	"#cc241d",
 	"#98971a",
@@ -206,7 +206,7 @@ static const char *colorname_gruvbox_light_medium[] = {
 	"#3c3836",
 };
 
-static const char *colorname_gruvbox_light_soft[] = {
+static const char *colornames_gruvbox_light_soft[] = {
 	"#f2e5bc",
 	"#cc241d",
 	"#98971a",
@@ -224,6 +224,48 @@ static const char *colorname_gruvbox_light_soft[] = {
 	"#427b58",
 	"#3c3836",
 };
+
+static const Colorscheme colorschemes_dark[] = {
+	{
+		.name = "st default",
+		.colors = colornames_default,
+	},
+	{
+		.name = "gruvbox dark hard",
+		.colors = colornames_gruvbox_dark_hard,
+	},
+	{
+		.name = "gruvbox dark medium",
+		.colors = colornames_gruvbox_dark_medium,
+	},
+	{
+		.name = "gruvbox dark soft",
+		.colors = colornames_gruvbox_dark_soft,
+	},
+};
+const size_t COLORSCHEMES_DARK_LEN = sizeof(colorschemes_dark) / sizeof(Colorscheme);
+
+static const Colorscheme colorschemes_light[] = {
+	{
+		.name = "gruvbox light hard",
+		.colors = colornames_gruvbox_light_hard,
+	},
+	{
+		.name = "gruvbox light medium",
+		.colors = colornames_gruvbox_light_medium,
+	},
+	{
+		.name = "gruvbox light soft",
+		.colors = colornames_gruvbox_light_soft,
+	},
+};
+const size_t COLORSCHEMES_LIGHT_LEN = sizeof(colorschemes_light) / sizeof(Colorscheme);
+
+static const char **colorname = colornames_gruvbox_dark_hard;
+
+/* set index of color scheme where cycling should start */
+static size_t current_colorscheme_dark = 0;
+static size_t current_colorscheme_light = 0;
 
 /*
  * Default colors (colorname index)
@@ -277,6 +319,10 @@ static MouseShortcut mshortcuts[] = {
 #define MODKEY Mod1Mask
 #define TERMMOD (ControlMask|ShiftMask)
 
+#define CYCLE_COLORS_DARK 10
+#define CYCLE_COLORS_LIGHT 11
+#define CYCLE_COLORS_END 12
+
 static Shortcut shortcuts[] = {
 	/* mask                 keysym          function        argument */
 	{ XK_ANY_MOD,           XK_Break,       sendbreak,      {.i =  0} },
@@ -291,6 +337,9 @@ static Shortcut shortcuts[] = {
 	{ TERMMOD,              XK_Y,           selpaste,       {.i =  0} },
 	{ ShiftMask,            XK_Insert,      selpaste,       {.i =  0} },
 	{ TERMMOD,              XK_Num_Lock,    numlock,        {.i =  0} },
+	{ XK_NO_MOD,            XK_F10,         cyclecolors,    {.ui = CYCLE_COLORS_DARK} },
+	{ XK_NO_MOD,            XK_F11,         cyclecolors,    {.ui = CYCLE_COLORS_LIGHT} },
+	{ XK_NO_MOD,            XK_F12,         cyclecolors,    {.ui = CYCLE_COLORS_END} },
 };
 
 /*

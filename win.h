@@ -1,5 +1,7 @@
 /* See LICENSE for license details. */
 
+#define INFO_TITLE_SEPARATOR " // "
+
 enum win_mode {
 	MODE_VISIBLE     = 1 << 0,
 	MODE_FOCUSED     = 1 << 1,
@@ -24,19 +26,19 @@ enum win_mode {
 };
 
 typedef struct {
-	char *name;
-	char **colors[];
+	const char *name;
+	const char **colors;
 } Colorscheme;
 
 void xbell(void);
 void xclipcopy(void);
-void xcyclecolorscheme(Arg);
+void xcyclecolorscheme(size_t *, const Colorscheme *, const size_t);
 void xdrawcursor(int, int, Glyph, int, int, Glyph);
 void xdrawline(Line, int, int, int);
 void xfinishdraw(void);
 void xloadcols(void);
 int xsetcolorname(int, const char *);
-void xsetinfotitle(char *);
+void xsetinfotitle(const char *);
 void xsettitle(char *);
 int xsetcursor(int);
 void xsetmode(int, unsigned int);

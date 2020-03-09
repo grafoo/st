@@ -51,6 +51,7 @@ typedef struct {
 /* function definitions used in config.h */
 static void clipcopy(const Arg *);
 static void clippaste(const Arg *);
+static void cyclecolors(const Arg *);
 static void numlock(const Arg *);
 static void selpaste(const Arg *);
 static void zoom(const Arg *);
@@ -276,6 +277,34 @@ void
 numlock(const Arg *dummy)
 {
 	win.mode ^= MODE_NUMLOCK;
+}
+
+void
+cyclecolors(const Arg *arg)
+{
+	switch (arg->ui) {
+	case CYCLE_COLORS_DARK:
+		/* set dark scheme */
+		xcyclecolorscheme(&current_colorscheme_dark,
+				  colorschemes_dark,
+				  COLORSCHEMES_DARK_LEN);
+		break;
+	case CYCLE_COLORS_LIGHT:
+		/* set light scheme */
+		xcyclecolorscheme(&current_colorscheme_light,
+				  colorschemes_light,
+				  COLORSCHEMES_LIGHT_LEN);
+		break;
+	case CYCLE_COLORS_END:
+		/* remove info message from window title */
+		xsetinfotitle(NULL);
+		return;
+	default:
+		return;
+	}
+
+	xloadcols();
+	redraw();
 }
 
 void
@@ -767,6 +796,79 @@ xsetcolorname(int x, const char *name)
 	dc.col[x] = ncolor;
 
 	return 0;
+}
+
+void
+xsetinfotitle(const char *info)
+{
+	/* marker if info is beeing shown */
+	static unsigned short showing_info = 0;
+	static char *title = NULL;
+
+	/* get window title */
+	XTextProperty wm_name_text_property;
+	if (XGetWMName(xw.dpy, xw.win, &wm_name_text_property) == 0) {
+		return;
+	}
+	char **wm_name_text_list;
+	int wm_name_text_list_len;
+	Xutf8TextPropertyToTextList(xw.dpy, &wm_name_text_property, &wm_name_text_list,
+				    &wm_name_text_list_len);
+	XFree(wm_name_text_property.value);
+	/* TODO: Check for error (e.g. out of memory) */
+	if (wm_name_text_list_len != 1) {
+		return;
+	}
+
+	/* reset title to previous value without info message */
+	/* TODO: Handle reset when no info was shown and title was set via e.g.
+	   `printf "\033]2;%s\007" spam` preventing reset to
+	   `opt_title`. */
+	if (info == NULL) {
+		xsettitle(title);
+		free(title);
+		title = NULL;
+		showing_info = 0;
+		return;
+	}
+
+	/* use opt_title to store actual window title for later reset */
+	if(!showing_info) {
+		title = (char*) xmalloc(strlen(wm_name_text_list[0]) + 1);
+		strncpy(title, wm_name_text_list[0],
+			strlen(wm_name_text_list[0]) + 1);
+		XFreeStringList(wm_name_text_list);
+	}
+
+	/* set info title */
+	size_t info_title_len = strlen(title) + strlen(INFO_TITLE_SEPARATOR)
+		+ strlen(info);
+	char *info_title = (char*) xmalloc(info_title_len + 1);
+	memset(info_title, 0, info_title_len);
+	strncat(info_title, title, info_title_len);
+	strncat(info_title, INFO_TITLE_SEPARATOR, info_title_len);
+	strncat(info_title, info, info_title_len);
+	xsettitle(info_title);
+	memset(info_title, 0, info_title_len);
+	free(info_title);
+	info_title = NULL;
+
+	/* set marker that title is showing info */
+	showing_info = 1;
+}
+
+void
+xcyclecolorscheme(size_t *schemes_idx, const Colorscheme schemes[],
+		  const size_t schemes_len)
+{
+	(*schemes_idx)++;
+
+	if ( schemes_idx < 0 || *schemes_idx >= schemes_len ) {
+		*schemes_idx = 0;
+	}
+
+	colorname = schemes[*schemes_idx].colors;
+	xsetinfotitle(schemes[*schemes_idx].name);
 }
 
 /*
